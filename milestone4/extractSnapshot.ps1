@@ -20,6 +20,6 @@ $linkedname = "{0}.linked" -f $vm.name
 $linkedvm = New-VM -LinkedClone -Name $linkedname -VM $vm -ReferenceSnapshot $snapshot -VMHost $vmhost -Datastore $ds
 $newvm = New-VM -Name $newvmname -VM $linkedvm -VMHost $vmhost -Datastore $ds
 
-$newvm | new-snapshot -Name "Base"
+$newvm | new-snapshot -Name "base"
 
 $linkedvm | Remove-VM
