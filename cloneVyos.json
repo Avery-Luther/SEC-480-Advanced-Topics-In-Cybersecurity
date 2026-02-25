@@ -1,6 +1,6 @@
 {
 	"OldVmName" : "vyos.base",
 	"VMHost" : "super26.avery.local",
-	"LinkedOrFull" : 1 ,
+	"LinkedOrFull" : 2 ,
 	"OldSnapshotName" : "base"
 }

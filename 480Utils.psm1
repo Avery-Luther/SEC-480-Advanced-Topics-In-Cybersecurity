@@ -131,70 +131,76 @@ function New-480Clone($ConfigPath)
 	}	
 	$operation = $true		
 	While ($operation)
-	{
-		if($Choice -eq 1){
-			Write-Host "Creating Linked Clone"
-			# If there isn't a VM snapshot this will ask if you want to make a snapshot.	
-			if ((Get-Snapshot -VM $OldVM | Measure-Object) -eq 0)
-			{
-				
-				$operation2 = $true
-				While ($operation2)
-				{
-					if (($conf.TakeOldSnapshot -inotlike 'y') -or ($conf.TakeOldSnapshot -inotlike 'n'))
-					{
-						$TakeOldSnapshot = Read-Host "There are no Snapshots on this VM.`nWould you like to take a new snapshot (y/N)"
-					} else {
-						$TakeOldSnapshot = $conf.TakeOldSnapshot
-					}
-					if ($TakeOldSnapshot -ilike "y")
-					{
-						New-Snapshot -VM $OldVM -Name "base" -Description "Created with 480 Utils while creating a linked clone"
-						$operation2 = $false
-					} elseif ($TakeOldSnapshot -ilike "n")
-					{
-						$errormsg = Write-Host "Cannot create a linked clone without a snapshot."
-						$operation2 = $false
-						$operation = $false
-						return $errormsg
-					} else
-					{
-						Write-Host "Please enter a 'y' for yes or 'n' for no"
-					}
-				}
-			}
+	{	
+		# If there isn't a VM snapshot this will ask if you want to make a snapshot.	
+		if ((Get-Snapshot -VM $OldVM | Measure-Object) -eq 0)			{
+	
 			$operation2 = $true
 			While ($operation2)
 			{
-
-				if ((Get-Snapshot -VM $OldVM | Select-Object -ExpandProperty Name) -contains $conf.OldSnapshotName)
+				if (($conf.TakeOldSnapshot -inotlike 'y') -or ($conf.TakeOldSnapshot -inotlike 'n'))
 				{
-					$OldSnapshotName = $conf.OldSnapshotName
-					$operation2 = $false 
+					$TakeOldSnapshot = Read-Host "There are no Snapshots on this VM.`nWould you like to take a new snapshot (y/N)"
 				} else {
-					$OldSnapshots = Get-Snapshot -VM $OldVM 
-					Write-Host "Snapshots to link from:"
-					Get-Snapshot -VM $OldVM | Select Name,Created | Format-Table -Wrap | Out-String
-					$OldSnapshotName = Read-Host -Prompt "Which snapshot would you like to link from?"
-					if ((Get-Snapshot -VM $OldVM | Select-Object -ExpandProperty Name) -contains $OldSnapshotName)
-					{
-						$operation2 = $false
-					} else
-					{
-						Write-Host "Please enter a snapshot that exists"
-					}
+					$TakeOldSnapshot = $conf.TakeOldSnapshot
+				}
+				if ($TakeOldSnapshot -ilike "y")
+				{
+					New-Snapshot -VM $OldVM -Name "base" -Description "Created with 480 Utils while creating a linked clone"
+					$operation2 = $false
+				} elseif ($TakeOldSnapshot -ilike "n")
+				{
+					$errormsg = Write-Host "Cannot create a linked clone without a snapshot."
+					$operation2 = $false
+					$operation = $false
+					return $errormsg
+				} else
+				{
+					Write-Host "Please enter a 'y' for yes or 'n' for no"
 				}
 			}
-			$OldSnapshot = Get-Snapshot -VM $OldVM -Name $OldSnapshotName
-			# Create the linked clone
+		}
+		$operation2 = $true
+		While ($operation2)
+		{
+			if ((Get-Snapshot -VM $OldVM | Select-Object -ExpandProperty Name) -contains $conf.OldSnapshotName)
+			{
+				$OldSnapshotName = $conf.OldSnapshotName
+				$operation2 = $false 
+			} else {
+				$OldSnapshots = Get-Snapshot -VM $OldVM 
+				Write-Host "Snapshots to link from:"
+				Get-Snapshot -VM $OldVM | Select Name,Created | Format-Table -Wrap | Out-String
+				$OldSnapshotName = Read-Host -Prompt "Which snapshot would you like to link from?"
+				if ((Get-Snapshot -VM $OldVM | Select-Object -ExpandProperty Name) -contains $OldSnapshotName)
+				{
+					$operation2 = $false
+				} else
+				{
+					Write-Host "Please enter a snapshot that exists"
+				}
+			}
+		}
+		$OldSnapshot = Get-Snapshot -VM $OldVM -Name $OldSnapshotName
+		# Create the linked clone
+
+		if($Choice -eq 1)
+		{
+			Write-Host "Creating Linked Clone"
 			New-VM -VM $OldVM -ReferenceSnapshot $OldSnapshot -LinkedClone -Datastore $ds -VMHost $VMHost -Name $CloneName
 			$operation = $false
 		}
-		if($Choice -eq 2){
+		if($Choice -eq 2)
+		{
 			Write-Host "Creating Full Clone"
-			New-VM -VM $OldVM -Datastore $ds -VMHost $VMHost -Name $CloneName
+			$TempLinkedName = $CloneName
+			$TempLinkedName += ".temp"
+			$LinkedVM = New-VM -VM $OldVM -LinkedClone -ReferenceSnapshot $OldSnapshot -Datastore $ds -VMHost $VMHost -Name $TempLinkedName
+			New-VM -VM $LinkedVM -Datastore $ds -VMHost $VMHost -Name $CloneName	
+			$LinkedVM | Remove-VM
 			$operation = $false
 		}
+		New-Snapshot -VM (Get-VM -Name $CloneName) -Name "base"
 			
 	}
 }
