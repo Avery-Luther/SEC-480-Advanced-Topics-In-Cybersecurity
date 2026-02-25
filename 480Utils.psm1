@@ -83,7 +83,7 @@ function New-480Clone($ConfigPath)
 			Write-Host "VM Hosts:"
 			Get-VMHost -Location '480-avery'
 			$VMHost = Read-Host -Prompt "Where would you like your VM?"
-			if ($VMHost -eq $null)
+			if ((Get-VMHost -Location '480-avery' | Select-Object -ExpandProperty Name) -inotcontains $VMHost)
 			{
 				Write-Host "Please enter a real vm host"
 			} else 
