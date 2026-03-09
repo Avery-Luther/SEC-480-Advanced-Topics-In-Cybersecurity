@@ -1,0 +1,5 @@
+{
+	"NewVSName" : "testNetwork",
+	"VMHost" : "super26.avery.local",
+	"NewPortGroupName" : "testNetwork"
+}

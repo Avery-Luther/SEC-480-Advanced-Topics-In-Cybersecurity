@@ -1,0 +1,8 @@
+{
+	"OldVmName" : "vyos.base",
+	"VMHost" : "super26.avery.local",
+	"LinkedOrFull" : 1 ,
+	"OldSnapshotName" : "base",
+	"CloneName" : "blue26-fw"
+
+}

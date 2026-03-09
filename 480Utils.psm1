@@ -95,7 +95,7 @@ function New-480Clone($ConfigPath)
 	{
 		$VMHost = $conf.VMHost
 	}
-	
+
 	if (($conf.CloneName -eq $null) -or ((Get-VM -location $VMHost | Select-Object -ExpandProperty Name) -icontains $conf.CloneName))
 	{
 		#Gets the new vm name and checks to see if it already exists
@@ -205,14 +205,202 @@ function New-480Clone($ConfigPath)
 	}
 }
 
-<#
-function Get-480Info([string] $configpath){
+function New-480Network($ConfigPath)
+{
+	if ((Test-Path -Path $ConfigPath) -and (Get-Content -Raw -Path $ConfigPath | Test-Json))
+	{
+		$conf = Get-Content -Raw -Path $ConfigPath | ConvertFrom-Json
+		$msg = "Using config at {0}" -f $ConfigPath
+		Write-Host $msg
+	} else 
+	{
+		Write-Host "Config path either doesn't exist or is empty"
+	}
+
+	#Get the VMHost
+	if (($conf.VMHost -eq $null) -or ((Get-VMHost -Location '480-avery' | Select-Object -ExpandProperty Name) -inotcontains $conf.VMHost))
+	{
+		# Get the VM host location
+		$operation = $true
+		While ($operation)
+		{
+
+			Write-Host "VM Hosts:"
+			Get-VMHost -Location '480-avery'
+			$VMHost = Read-Host -Prompt "Where would you like your VM?"
+			if ((Get-VMHost -Location '480-avery' | Select-Object -ExpandProperty Name) -inotcontains $VMHost)
+			{
+				Write-Host "Please enter a real vm host"
+			} else 
+			{
+				$operation = $false
+			}
+		}
+	} else 
+	{
+		$VMHost = $conf.VMHost
+	}
+
+
+	if (($conf.NewVSName -eq $null) -or ((Get-VirtualSwitch | Select-Object -ExpandProperty Name) -icontains $conf.NewVSName))
+	{
+		#Gets the new virtual switch name and checks to see if it already exists
+		$operation = $true
+		While ($operation)
+		{
+			$NewVSName = Read-Host "Name of the new virtual switch"
+			if ((Get-VirtualSwitch | Select-Object -ExpandProperty Name) -icontains $VirtualSwitchName)
+			{
+				Write-Host "That name is taken. Please enter a different name"
+			} else
+			{
+				$operation = $false
+			}
+		}
+	} else
+	{
+		$NewVSName = $conf.NewVSName
+	}
+	$VirtualSwitch = New-VirtualSwitch -VMHost $VMHost -Name $NewVSName
+	if ($conf.NewPortGroupName -eq $null)
+	{
+		$NewPortGroupName = Read-Host "Name of the new port group"
+	} else
+	{
+		$NewPortGroupName = $conf.NewVSName
+	}
+	New-VirtualPortGroup -VirtualSwitch $VirtualSwitch -Name $NewPortGroupName
 
 }
+function Get-480IP($VMName) 
+{
+	#Gets the first IP of a VM
+	if ($VMName -eq $null){
+		$operation = $true	
+		While ($operation)
+		{
 
-function Reload-480Utils(){
-	#This function is broken
-	Remove-Module -Name 480Utils
-	Import-Module './480Utils.psm1' -Force
+			Get-VM -Location "480-avery" | Select Name | Out-String
+			$VMName = Read-Host -Prompt "Which VM would you like?"	
+			$VM = Get-VM -Name $VMName
+			if ($VM -eq $null)
+			{
+				Write-Host "The selected VM doesn't exist. Please enter one that does."
+			} else
+			{
+				$operation = $false
+			}
+		}
+	} else
+	{
+		$VM = Get-VM -Name $VMName
+	}
+	$Nics = $VM.guest.nics 
+	return ($Nics[0].ipaddress, $nics[0].macaddress)
+	
 }
-#>
+
+function Start-480VM ($VMName){
+	try
+	{
+		$VM = Get-VM -Name $VMName
+	} catch
+	{
+
+		Write-Host "That VM does not exist. Please try a different name."
+		Return
+	}
+	Start-VM -VM $VM
+}
+function Stop-480VM ($VMName){
+	try
+	{
+		$VM = Get-VM -Name $VMName
+	} catch
+	{
+		Write-Host "That VM does not exist. Please try a different name."
+		Return
+	}
+	Stop-VM -VM $VM
+
+}
+function Set-480Network ($ConfigPath){	
+	# Getting the config file	
+	if ((Test-Path -Path $ConfigPath) -and (Get-Content -Raw -Path $ConfigPath | Test-Json))
+	{
+		$conf = Get-Content -Raw -Path $ConfigPath | ConvertFrom-Json
+		$msg = "Using config at {0}" -f $ConfigPath
+		Write-Host $msg
+	} else 
+	{
+		Write-Host "Config path either doesn't exist or is empty"
+	}
+	# Get VM
+	if (($conf.VMName -eq $null) -or ((Get-VM -Location "480-avery" | Select-Object -ExpandProperty Name) -inotcontains $conf.VMName)){
+		$operation = $true	
+		While ($operation)
+		{
+
+			Get-VM -Location "480-avery" | Select Name | Out-String
+			$VMName = Read-Host -Prompt "Which VM?"	
+			$VM = Get-VM -Name $VMName
+			if ($VM -eq $null)
+			{
+				Write-Host "The selected VM doesn't exist. Please enter one that does."
+			} else
+			{
+				$operation = $false
+			}
+		}
+	} else
+	{
+		$VMName = $conf.VMName
+		$VM = Get-VM -Name $VMName 
+	}
+	# Get Network adapter
+	if (($conf.AdapterName -eq $null) -or ((Get-NetworkAdapter -VM $VM -Name $conf.AdapterName ) -eq $null)){
+		$operation = $true	
+		While ($operation)
+		{
+
+			Get-NetworkAdapter -VM $VM | Select Name, NetworkName, MacAddress | Format-Table -Wrap | Out-String
+			$AdapterName = Read-Host -Prompt "Which network adapter?"	
+			$Adapter = Get-NetworkAdapter -VM $VM -Name $AdapterName
+			if ($Adapter -eq $null)
+			{
+				Write-Host "The selected adapter doesn't exist. Please enter one that does."
+			} else
+			{
+				$operation = $false
+			}
+		}
+	} else
+	{
+		$AdapterName = $conf.VMName
+		$Adapter = Get-NetworkAdapter -VM $VM -Name $AdapterName
+	}
+	# Get Port Group
+	if (($conf.PortGroupName -eq $null) -or ((Get-VirtualPortGroup) -inotcontains $conf.PortGroupName))
+	{
+		$operation = $true
+		While($operation){
+			Get-VirtualPortGroup | Select Name | Format-Table -Wrap | Out-String
+			$PortGroupName = Read-Host -Prompt "Which Port Group?"
+			$PortGroup = Get-VirtualPortGroup -Name $PortGroupName
+			if ($PortGroup -eq $null)
+			{
+				Write-Host "The selected port group does not exists. Please enter one that does."
+			} else 
+			{
+				$operation = $false 
+			}
+		}
+	} else 
+	{
+		$PortGroupName = $conf.PortGroupName
+		$PortGroup = Get-VirtualPortGroup -Name $PortGroupName
+	}	
+	# Implement Change
+	Set-NetworkAdapter -NetworkAdapter $Adapter -Portgroup $PortGroup
+}
+
