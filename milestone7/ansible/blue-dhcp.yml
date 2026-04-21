@@ -1,0 +1,20 @@
+- name: blue DHCP config
+  hosts: vyos
+  vars:
+    ansible_network_os: vyos
+    ansible_connection: network_cli
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_user: vyos
+  tasks:
+    - name: blue DHCP config
+      vyos_config:
+        save: yes
+        lines:
+        - set service dhcp-server global-parameters 'local-address 10.0.5.2;'
+        - set service dhcp-server shared-network-name BLUE1 authoritative
+        - set service dhcp-server shared-network-name BLUE1 subnet 10.0.5.0/24 default-router '10.0.5.2'
+        - set service dhcp-server shared-network-name BLUE1 subnet 10.0.5.0/24 domain-name 'blue1.local'
+        - set service dhcp-server shared-network-name BLUE1 subnet 10.0.5.0/24 lease '86400'
+        - set service dhcp-server shared-network-name BLUE1 subnet 10.0.5.0/24 name-server '10.0.5.5'
+        - set service dhcp-server shared-network-name BLUE1 subnet 10.0.5.0/24 range BLUE1-POOL start '10.0.5.75'
+        - set service dhcp-server shared-network-name BLUE1 subnet 10.0.5.0/24 range BLUE1-POOL stop '10.0.5.125'

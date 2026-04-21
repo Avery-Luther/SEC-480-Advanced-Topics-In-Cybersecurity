@@ -1,0 +1,8 @@
+{
+	"OldVmName" : "rocky.base",
+	"VMHost" : "super26.avery.local",
+	"LinkedOrFull" : 1 ,
+	"OldSnapshotName" : "base",
+	"AdapterName" : "Network adapter 1",
+	"PortGroupName" : "blue26"
+}
