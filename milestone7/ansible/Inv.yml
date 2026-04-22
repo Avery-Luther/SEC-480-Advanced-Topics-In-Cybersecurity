@@ -1,3 +1,38 @@
 vyos:
   hosts:
     10.0.5.2:
+Linux:
+  hosts:
+  children:
+    rocky:
+      hosts:
+        10.0.5.77:
+          hostname: rocky1
+          lan_ip: 10.0.5.10
+        10.0.5.76:
+          hostname: rocky2
+          lan_ip: 10.0.5.11
+        10.0.5.75:
+          hostname: rocky3
+          lan_ip: 10.0.5.12
+      vars:
+        device: ens33
+    ubuntu:
+      hosts:
+        10.0.5.78:
+          hostname: bluebuntu1
+          lan_ip: 10.0.5.30
+        10.0.5.79:
+          hostname: bluebuntu2
+          lan_ip: 10.0.5.31
+
+      vars:
+        ansible_user: avery
+
+  vars:     
+    public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCl/5Bv5V2zSKt9lrTEk8KlHe3w94PLeCdAlg7RFQnYzbrWo1AU8ru3jIy78TFBOZF58j1tim/YQlrNoFSoHz6mTMDb7igpz7o+Iq89R8fllgYKi0aar92h+Gafo7fkWdgMB5KW+4hEzNS7mxwkgEJPMmQTlyc+dHs73YhFTMep5CklltT+yZhr3DTHg4uVESWWVwn1kMYiU783xiy3T2b1GAkRMcFGZ0VFNkM2m0wMS5TRPegZPDUBe5AG4+zqlitRYTMpYU4ir1SLGWGa6yfn4X/OHMOaDmoT4o+CJ/U1m6tbOKyZwnKih8a+7cvtEG37r6Dg+FOE+I737jdOoDkjG5ap/cx++BURe7BSXMRaNf/vAwvaQvLPaEAsCnZf2Q4Mg2vVmkn12F0esZFTDFIa23fS5i/ulqnuVSyGfb9ok6wp7v1GCWWyuroHFrObSW4sS5NBY9BF8cU1gy9UiUIOZlUgfHGbZOyj7yXGjRJdqBgOvio2AR2N4PvXQaKlMJM= avery@xubuntu-wan"
+    ansible_user: deployer
+    prefix: 24
+    gateway: 10.0.5.2
+    name_server: 10.0.5.5
+    domain: blue26.local
