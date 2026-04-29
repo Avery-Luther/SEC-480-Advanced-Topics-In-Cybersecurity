@@ -1,4 +1,4 @@
-- name: blue rocky config\
+- name: bluebuntu config
   hosts: ubuntu
   tasks:
     - name: create the .ssh dir
