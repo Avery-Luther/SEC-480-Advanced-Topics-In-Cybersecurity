@@ -1,0 +1,45 @@
+- name: blue adds config 
+  hosts: servers
+  vars_prompt:
+    - name: adminPassword
+      prompt: new admin password
+      unsafe: true
+    - name: safeModePassword
+      prompt: safemode password
+      unsafe: true
+  tasks:
+    - name: set hostname
+      ansible.windows.win_hostname:
+        name: "{{ hostname }}"
+      register: res
+    - name: reboot after hostname
+      ansible.windows.win_reboot:
+    - name: set admin password
+      ansible.windows.win_user:
+        name: Administrator
+        state: present
+        password: "{{ adminPassword }}"
+    - name: Create a forest
+      microsoft.ad.domain:
+        dns_domain_name: "{{ domain }}"
+        safe_mode_password: "{{ safeModePassword }}"
+        reboot: true
+    - name: Add ansible user to domain admins
+      ansible.windows.win_user:
+        name: "{{ ansible_user }}"
+        state: present
+        groups_action: add
+        groups:
+          - Users
+          - Domain Admins
+          - Administrators
+    - name: Add DNS forwarder
+      ansible.windows.win_shell: Add-DnsServerForwarder -IPAddress 10.0.5.2 -PassThru
+    - name: Run powershell script
+      ansible.windows.win_powershell:
+        remote_src: false
+        path: OUs.ps1
+
+
+
+      

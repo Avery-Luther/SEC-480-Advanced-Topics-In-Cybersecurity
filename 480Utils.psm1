@@ -403,4 +403,32 @@ function Set-480Network ($ConfigPath){
 	# Implement Change
 	Set-NetworkAdapter -NetworkAdapter $Adapter -Portgroup $PortGroup
 }
-
+function Set-480WinIP($VMName, $IP, $SNM, $DNS, $DefaultGateway, $GuestUser, $GuestPassword){
+	if ((Get-VM -Location "480-avery" | Select-Object -ExpandProperty Name) -inotcontains $VMName){
+		$operation = $true
+		While($operation){
+			Get-VM -Locaiton "480-avery" | Select Name | Out-String
+			$VMName = Read-Host -Prompt "Which VM?"
+			$VM = Get-VM -Name $VMName
+			if($VM -eq $null){
+				Write-Host "The Selected VM does not exist. Please enter one that does."
+			} else {
+				$operation -eq $false
+			}
+		}
+	} else {
+		$VM = Get-VM -Name $VMName
+	}
+	$operation = $true
+	while ($operation){
+		if ($IP -notmatch "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$") {
+			$IP = Read-Host -Prompt "Please enter a valid IPv4 Address"
+		} else {
+			$operation = $false
+		}
+	}
+	$Script = "netsh interface ipv4 set address name=`"Ethernet0`" static $IP $SNM $DefaultGateway"
+	$Script2 = "netsh interface ipv4 set dns `"Ethernet0`" static $DNS"
+	Invoke-VMScript -VM $VM -GuestUser $GuestUser -GuestPassword $GuestPassword -ScriptText $Script -ScriptType bat
+	Invoke-VMScript -VM $VM -GuestUser $GuestUser -GuestPassword $GuestPassword -ScriptText $Script2 -ScriptType bat
+}

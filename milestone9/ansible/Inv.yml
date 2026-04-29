@@ -1,0 +1,14 @@
+windows:
+  hosts:
+  children:
+    servers:
+      hosts:
+        10.0.5.5:
+          hostname: "dc1"
+      vars:
+        domain: blue26.local
+        ansible_user: deployer
+        ansible_connection: ssh
+        ansible_shell_type: powershell
+
+
